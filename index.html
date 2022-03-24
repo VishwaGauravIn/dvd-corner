@@ -1,0 +1,174 @@
+<html>
+  <head>
+    <title>Document</title>
+  </head>
+  <style>
+    body {
+      background-color: #121212;
+    }
+
+    .tv-style {
+      width: 400px;
+      height: 300px;
+      min-width: 115px;
+      min-height: 100px;
+      max-width: 95%;
+      max-height: 95%;
+      margin: 0 auto;
+      padding: 16px 16px 50px 16px;
+      margin-top: 32px;
+      resize: both;
+      overflow: hidden;
+      position: relative;
+      border-radius: 10px;
+      border-bottom-left-radius: 50% 2%;
+      border-bottom-right-radius: 50% 2%;
+      border-top: 3px solid #888;
+      background-color: #000000;
+      background-color: #2d3436;
+      background-image: linear-gradient(315deg, #2d3436 0%, #000000 74%);
+      box-shadow: 0 0 100px 0 rgba(150, 170, 182, 0.4);
+    }
+    .tv-style:after {
+      content: "";
+      display: block;
+      position: absolute;
+      bottom: 3%;
+      left: 36%;
+      height: 0.5%;
+      width: 28%;
+      background: #ddd;
+      border-radius: 50%;
+      box-shadow: 0 0 3px 0 white;
+    }
+
+    #tv {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background-color: #777;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    #logo {
+      position: absolute;
+      font-weight: bold;
+      text-align: center;
+      user-select: none;
+      font-style: italic;
+      max-width: 95%;
+      max-height: 95%;
+      min-width: 0;
+      min-height: 0;
+    }
+  </style>
+  <body>
+    <div class="tv-style">
+      <div id="tv">
+        <div
+          id="logo"
+          style="
+            left: 0px;
+            top: 0px;
+            background-color: #ff0000;
+            color: #ffffff;
+            width: 70px;
+            height: 40px;
+            line-height: 40px;
+          "
+        >
+          DVD
+        </div>
+      </div>
+    </div>
+    <script>
+      console.clear();
+      const tvElm = document.querySelector("#tv");
+      const logoElm = document.querySelector("#logo");
+
+      let speed = 100; // px per second
+      let monitorBG = 128; // color
+      let isCtrl = false;
+
+      let lastTime = +new Date();
+      let deltaTime = 0;
+      let movement = [1, 1]; // [x, y]
+      let tvBounds = tvElm.getBoundingClientRect();
+      let logoBounds = logoElm.getBoundingClientRect();
+      let x = 0;
+      let y = 0;
+      let nextX = 0;
+      let nextY = 0;
+
+      const randomRange = (min, max) =>
+        min + (crypto.getRandomValues(new Uint32Array(1))[0] % (max - min + 1));
+
+      const collide = () => {
+        const red = randomRange(0, 19) * 32;
+        const green = randomRange(0, 19) * 32;
+        const blue = randomRange(0, 19) * 32;
+        const avg = red + blue + green / 3;
+        // console.log(red, green, blue, avg)
+        if (
+          Math.abs(avg - red) < 80 &&
+          Math.abs(avg - green) < 80 &&
+          Math.abs(avg - blue) < 80
+        ) {
+          return collide();
+        }
+
+        const bgCol = `rgb(${red}, ${green}, ${blue})`;
+        logoElm.style.backgroundColor = bgCol;
+        logoElm.style.color =
+          red * 0.299 + green * 0.587 + blue * 0.114 <= 186
+            ? "#FFFFFF"
+            : "#000000";
+      };
+
+      const loop = () => {
+        deltaTime = new Date() - lastTime;
+        // deltaTime = 1;
+        lastTime = +new Date();
+
+        tvBounds = tvElm.getBoundingClientRect();
+        logoBounds = logoElm.getBoundingClientRect();
+
+        x = logoBounds.left;
+        y = logoBounds.top;
+
+        if (logoBounds.left < tvBounds.left) {
+          movement[0] = 1;
+          x = tvBounds.left;
+          collide();
+        }
+        if (logoBounds.right > tvBounds.right) {
+          movement[0] = -1;
+          x = tvBounds.right - logoBounds.width;
+          collide();
+        }
+        if (logoBounds.top < tvBounds.top) {
+          movement[1] = 1;
+          y = tvBounds.top;
+          collide();
+        }
+        if (logoBounds.bottom > tvBounds.bottom) {
+          movement[1] = -1;
+          y = tvBounds.bottom - logoBounds.height;
+          collide();
+        }
+
+        nextX = x + ((speed * deltaTime) / 1000) * movement[0] - tvBounds.left;
+        nextY = y + ((speed * deltaTime) / 1000) * movement[1] - tvBounds.top;
+
+        logoElm.style.left = `${nextX}px`;
+        logoElm.style.top = `${nextY}px`;
+
+        requestAnimationFrame(loop);
+        // setTimeout(loop, 1000)
+      };
+
+      loop();
+    </script>
+  </body>
+</html>
